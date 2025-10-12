@@ -14,21 +14,23 @@ function App() {
   const [password, setPassword] = useState("");
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState({ title: "", content: "" });
+  const [editNoteId, setEditNoteId] = useState(null);
 
-  // Auth state listener
+  // Firebase Auth listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
     return unsubscribe;
   }, []);
 
-  // Auth functions
+  // Auth
   const signup = () => createUserWithEmailAndPassword(auth, email, password);
   const login = () => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);
 
-  //  CRUD functions
+  // Helper
   const getToken = async () => user && (await user.getIdToken());
 
+  // Fetch notes
   const fetchNotes = async () => {
     const token = await getToken();
     const res = await axios.get("http://localhost:5000/api/notes", {
@@ -37,6 +39,7 @@ function App() {
     setNotes(res.data);
   };
 
+  // Add new note
   const addNote = async () => {
     const token = await getToken();
     const res = await axios.post("http://localhost:5000/api/notes", newNote, {
@@ -46,12 +49,32 @@ function App() {
     setNewNote({ title: "", content: "" });
   };
 
+  // Delete
   const deleteNote = async (id) => {
     const token = await getToken();
     await axios.delete(`http://localhost:5000/api/notes/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     setNotes(notes.filter((n) => n._id !== id));
+  };
+
+  // Edit
+  const startEditing = (note) => {
+    setEditNoteId(note._id);
+    setNewNote({ title: note.title, content: note.content });
+  };
+
+  const updateNote = async () => {
+    const token = await getToken();
+    const res = await axios.put(
+      `http://localhost:5000/api/notes/${editNoteId}`,
+      newNote,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setNotes(notes.map((n) => (n._id === editNoteId ? res.data : n)));
+    setEditNoteId(null);
+    setNewNote({ title: "", content: "" });
   };
 
   return (
@@ -75,7 +98,7 @@ function App() {
           <button onClick={logout}>Logout</button>
           <br /><br />
 
-          <h2>Your Notes</h2>
+          <h2>{editNoteId ? "✏️ Edit Note" : "Add Note"}</h2>
           <input
             placeholder="Title"
             value={newNote.title}
@@ -86,13 +109,16 @@ function App() {
             value={newNote.content}
             onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
           />
-          <button onClick={addNote}>Add</button>
+          <button onClick={editNoteId ? updateNote : addNote}>
+            {editNoteId ? "Update" : "Add"}
+          </button>
           <button onClick={fetchNotes}>Fetch Notes</button>
 
           <ul style={{ marginTop: 20, listStyle: "none" }}>
             {notes.map((n) => (
               <li key={n._id}>
                 <b>{n.title}</b>: {n.content}{" "}
+                <button onClick={() => startEditing(n)}>✏️</button>
                 <button onClick={() => deleteNote(n._id)}>❌</button>
               </li>
             ))}

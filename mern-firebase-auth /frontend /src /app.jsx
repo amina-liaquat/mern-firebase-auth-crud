@@ -16,7 +16,7 @@ function App() {
   const [newNote, setNewNote] = useState({ title: "", content: "" });
   const [editNoteId, setEditNoteId] = useState(null);
 
-  // Firebase Auth listener
+  // Firebase Auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
     return unsubscribe;

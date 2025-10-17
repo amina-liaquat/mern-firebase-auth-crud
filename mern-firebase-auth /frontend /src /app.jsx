@@ -22,7 +22,7 @@ function App() {
     return unsubscribe;
   }, []);
 
-  // Auth
+  // Author 
   const signup = () => createUserWithEmailAndPassword(auth, email, password);
   const login = () => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);

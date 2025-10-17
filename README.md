@@ -1,1 +1,1 @@
-# mern-firebase-auth-crud
+# Mern Firebase Auth Crud
